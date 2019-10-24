@@ -4,8 +4,10 @@ author: "Bangwei Zhou, Zhihao Ai"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
+library(ggplot2)
+library(gridExtra)
 ```
 
 # 第3章 调查连续变量
@@ -34,3 +36,81 @@ knitr::opts_chunk$set(echo = TRUE)
 图形很适合展示构成数据分布形状的特征。相较于一组概括的统计量，他们可以提供更多和不同的信息。显然，最好同时使用这两种方法。
 
 对于单个变量，均值通常是最重要的统计量。T检验可能是最常用的用于检验均值的统计检验。如果数据来自正态分布，可以使用T检验。对于来自正态分布的小型数据集（T检验是特意为小样本设计的），数据可能看上去很不正态，这就是为什么正态性检验对T检验的效用和支持都很有限。幸运的是，T检验对于非正态性非常稳定。不过我们还是至少应该在进行分析前，检查数据是否有严重的非正态性。而用图形是最好的方法。
+
+
+## 3.3 寻找特征
+
+
+本节将主要使用直方图讨论不同的数据集，以展示可能存在的特征以及如何找到它们。无论您偏好哪种图，研究很多示例以了解可能出现的各种类型以及如何去解释它们是尤为重要的。
+
+**Galton的身高数据**
+
+```{r echo=FALSE}
+data(galton, package="UsingR")
+ht <- "height (in)"
+par(mfrow=c(1,2), las=1, mar=c(3.1, 4.1, 1.1, 2.1)) 
+with(galton, {
+  hist(child, xlab=ht, main="Children", col="green") 
+  hist(parent, xlab=ht, main="Parents", col="blue")})
+```
+图3.2：子女和父母平均身高的直方图，使用默认组距。因为是分别绘制的，所以刻度不同。两个分布大致是对称的，子女的更为分散。组距设为1英寸。如果数据以厘米为单位，2.5厘米的组距可能更合适。
+
+```{r eval=FALSE}
+data(galton, package="UsingR")
+ht <- "height (in)"
+par(mfrow=c(1,2), las=1, mar=c(3.1, 4.1, 1.1, 2.1)) 
+with(galton, {
+  hist(child, xlab=ht, main="Children", col="green") 
+  hist(parent, xlab=ht, main="Parents", col="blue")})
+```
+
+Galton使用了包括父母和子女的身高数据，建立了他著名的关于相关和回归的思想。在**UsingR**包中的数据集*galton*包含了928个子女身高和205个”中间父母“身高。每个”中间父母“身高是父亲身高和1.08倍母亲身高的中间值。女儿的身高也都被乘以1.08。值得注意的是，此数据集中，对于每个子女身高，都有一个”中间父母“身高与其对应，因此许多”中间父母“身高是重复的。（有兴趣研究包含完整家庭信息（包括孩子的性别和顺序）的数据集的读者，请参阅[Hanley,2004]以及作者的网页）图3.2展示了两个变量的默认设置下的直方图。
+
+两种分布都大致对称，并且似乎没有异常值。由于两个图的刻度不同，很难直接比较。尽管它们似乎具有不同的组距，但实际上是相同的，这要归功于R能够寻找合理的间隔（在此情况下是整数），并且仅绘制数据范围的组。使组距非常小可以很好地帮助寻找空缺或堆积。条形图也能够做到，但不适用于具有许多不同值的大数据集。点图可以很好地发现空缺，但不能发现堆积。
+
+图3.3中，在组距为0.1的直方图中，我们可以看到身高的取值只有有限的一些（如果查阅此版本的数据集的R帮助，您会发现这些数据源自一个表格，所以单个值是没有被提供的）。在两个直方图中，似乎都在临界边界值的地方空缺较小。绘制出“原始”数据证实了这点，并且可以发现，父母的身高几乎都以.5结尾，而子女的身高几乎都以.2结尾。使用Hanley版本的数据集会更好。图3.3使用了`truehist`函数，因为可以直接设置组距。（`hist`使用组数。）由于它将直方图视为密度的估计，*y*轴刻度不再显示频率。
+
+```{r echo=FALSE}
+par(mfrow=c(1,2), las=1, mar=c(3.1, 4.1, 1.1, 2.1)) 
+with(galton, {
+  MASS::truehist(child, h=0.1) 
+  MASS::truehist(parent, h=0.1)})
+```
+
+图3.3：使用小组距绘制的子女和中间父母身高的直方图，以展示身高取值实际很少。显然，数据是汇总过的或记录时精度有限。因分别绘制，两图的刻度有所不同。
+
+```{r eval=FALSE}
+par(mfrow=c(1,2), las=1, mar=c(3.1, 4.1, 1.1, 2.1)) 
+with(galton, {
+  MASS::truehist(child, h=0.1) 
+  MASS::truehist(parent, h=0.1)})
+```
+
+实际上为了比较分布，可以绘制很多种图，例如平行箱形图。图3.4展示了具有相等的刻度和组距的上下两个直方图。*x*轴的极限包括了整个数据范围，*y*轴极限为则通过观察选择。
+
+正如Hanley所指出的那样，在解释数据时应牢记，Galton“通过提供奖品”获得了“他们自己的家庭记录的最好摘要”[Hanley，2004年]，因此样本几乎不随机；数据已经被四舍五入以用于制表；家庭成员数量从1到15，因此在数据集中一个中间父母数据出现了15次，而33个数据只出现一次。中位数已用红色垂直线标记。虽然均值十分接近，父母的分布明显更为集中。这是因为每个父母的值都是两个值的平均值。有趣（也许甚至可疑）的是子女的标准差2.52几乎恰好是$\sqrt{2}$乘以父母的标准差1.79。
+
+您可能会认为，如果我们知道每个父母的身高值以及子女的性别，就像Hanley的网页中Galton的完整数据那样，那么身高分布将是清楚的双峰分布，一个是女性的峰，一个是男性的峰。但不是。身高分布极少如此，像[Schilling et al.，2002]中所讨论的，其中还包括一些很好的推定的双峰分布的照片样例，它们是由让人们根据自己的身高排队构成的。
+
+
+```{r echo=FALSE}
+c1 <- ggplot(galton, aes(child)) + geom_bar(binwidth=1) +
+  xlim(60, 75) + ylim(0, 225) + ylab("") +
+  geom_vline(xintercept=median(galton$child), col="red")
+p1 <- ggplot(galton, aes(parent)) + geom_bar(binwidth=1) +
+  xlim(60, 75) + ylim(0, 225) + ylab("") +
+  geom_vline(xintercept=median(galton$parent), col="red")
+grid.arrange(c1, p1)
+```
+
+图3.4：在相同刻度下的子女和中间父母身高的直方图，中位数用红色标记。父母的身高分布变化较小，中位数稍高一些。
+
+```{r eval=FALSE}
+c1 <- ggplot(galton, aes(child)) + geom_bar(binwidth=1) +
+  xlim(60, 75) + ylim(0, 225) + ylab("") +
+  geom_vline(xintercept=median(galton$child), col="red")
+p1 <- ggplot(galton, aes(parent)) + geom_bar(binwidth=1) +
+  xlim(60, 75) + ylim(0, 225) + ylab("") +
+  geom_vline(xintercept=median(galton$parent), col="red")
+grid.arrange(c1, p1)
+```
