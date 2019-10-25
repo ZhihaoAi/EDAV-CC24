@@ -214,6 +214,33 @@ grid.arrange(c1, p1)</code></pre>
 <p>Tukey对箱形图的定义区分了异常值（距离箱形超过1.5倍箱长度）和极端离群值（距离箱形超过3倍箱长度），而许多箱形图并不显示这个区别。其实令人沮丧的，存在许多不同的箱形图定义，因此您应该始终确认是哪一种被使用了。有些不标记离群值，有些使用标准差而不是可靠的统计量，存在各种各样的变化。</p>
 <p>同一窗口中的一组箱形图可以是同一变量的箱形图，每个子组一个，或不同变量的箱形图。有必要知道是哪种类型。分组的箱线图必须具有相同的尺度，并且其宽度是关于组大小的方程。不同变量的箱形图可能具有不同的尺度，每个个体出现在每个箱形图中（除了缺失值），因此无需考虑不同的宽度。</p>
 </div>
+<div class="section level2">
+<h2>3.7 连续变量的建模和检验</h2>
+<ol style="list-style-type: decimal">
+<li>均值</li>
+</ol>
+<p>连续数据最常见的检验是通过某种方式检验均值，可能是相对于一个标准值，或与其他变量的均值相比较，或用子集。通常使用T检验。因为涉及该主题的文章太多，在此选择某一个参考是不公平的。另外，也可以检验中位数，特别是结合箱形图时。</p>
+<ol start="2" style="list-style-type: decimal">
+<li>对称性</li>
+</ol>
+<p>[Zheng and Gastwirth，2010]讨论了若干关于未知中位数的对称性检验，并提出自助抽样以提高检验的功效。</p>
+<ol start="3" style="list-style-type: decimal">
+<li>正态性</li>
+</ol>
+<p>有许多正态性测试（例如，Anderson-Darling，Shapiro-Wilk， Kolmogorov-Smirnov）。它们对小样本效果不好，对于特别大的样本又太过强烈。大样本往往具有某些特征导致零假设被拒绝。有一本书关于正态性检验[Thode Jr.，2002]，也有一个R包<strong>nortest</strong>提供了五种检验，加上R自带的<strong>stats</strong>包中Shapiro-Wilk检验。检验评估是否存在某些偏离正态的证据，而图形（尤其是分位图）有助于识别偏离正态的程度和类型。</p>
+<ol start="4" style="list-style-type: decimal">
+<li>密度估计</li>
+</ol>
+<p>R中有很多包提供各种形式的密度估计，因为太多不便全部列出。它们求出密度估计，但并不检验。选择您认为不错的一个（或多个）并使用它（或它们）。请记住，具有严格边界的变量密度（例如，无负数值）需要在边界处进行特殊处理。至少一个R包，<strong>logspline</strong>，为此问题提供了一个选项。大多数没有这么做。</p>
+<ol start="5" style="list-style-type: decimal">
+<li>离群值</li>
+</ol>
+<p>关于离群值的经典书籍[Barnett and Lewis，1994]描述了许多对于离群值的检验，它们主要用于单变量分布和个案。他们有多有用可能取决于特定的应用情景。像书中建议的，您需要注意掩盖（一组异常值使您无法识别另一个）和淹没（误把标准观测结果作为异常值）。</p>
+<ol start="6" style="list-style-type: decimal">
+<li>多峰性</li>
+</ol>
+<p>Good和Gaskin为寻找众数在一篇经常被引用的文章中[Good and Gaskins，1980]引入了“碰撞狩猎”（Bump-Hunting）一词。用于检验单峰性的浸入检验（dip test）在[Hartigan and Hartigan，1985]中被提出，可在R包<strong>diptest</strong>中找到。</p>
+</div>
 </div>
 
 
