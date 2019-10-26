@@ -189,3 +189,104 @@ R中有很多包提供各种形式的密度估计，因为太多不便全部列�
 
 Good和Gaskin为寻找众数在一篇经常被引用的文章中[Good and Gaskins，1980]引入了“碰撞狩猎”（Bump-Hunting）一词。用于检验单峰性的浸入检验（dip test）在[Hartigan and Hartigan，1985]中被提出，可在R包**diptest**中找到。
 
+
+# 7 图表：小提琴图
+
+## 7.1 本节介绍如何制作小提琴图。
+
+## 7.2 R中的一些例子
+
+我们调用`datasets`包中的`chickwts`，使用`ggplot2`绘制一副小提琴图。
+
+```{r echo=FALSE}
+# import ggplot and the Datasets Package
+library(datasets)
+library(ggplot2)
+
+supps <- c("horsebean", "linseed", "soybean", "meatmeal", "sunflower", "casein")
+
+# plot data
+
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)")
+```
+
+这是该代码:
+```{r eval=FALSE}
+# import ggplot and the Datasets Package
+library(datasets)
+library(ggplot2)
+
+supps <- c("horsebean", "linseed", "soybean", "meatmeal", "sunflower", "casein")
+
+# plot data
+
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)")
+```
+
+## 7.3 将统计量添加到小提琴图中
+
+### 7.3.1 添加中位数和四分位距
+
+我们可以将中位数和四分位距加到小提琴图上
+
+```{r eval=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+   geom_boxplot(width=0.1)
+```
+
+```{r echo=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+   geom_boxplot(width=0.1)
+```
+
+我们只需添加一个箱形图即可。
+
+### 7.3.2 数据显示为点
+
+```{r eval=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+  geom_dotplot(binaxis='y', dotsize=0.5, stackdir='center')
+```
+
+```{r echo=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+  geom_dotplot(binaxis='y', dotsize=0.5, stackdir='center')
+```
+
+## 7.4 描述
+
+小提琴图类似于箱形图。它较箱形图的优势在于，可以同时可视化数据的分布和概率密度。我们可以将小提琴图视为箱形图和核密度图的结合。
+
+小提琴图可以让我们看到数据是单峰，双峰还是多峰。这些简单的细节无法在箱形图中看到。可以通过小提琴图的宽度看出分布。
+
+## 7.5 何时使用
+
+小提琴图仅应用于显示连续变量。
+
+## 7.6 外部资源
+
+[ggplot2小提琴图](http://www.sthda.com/english/wiki/ggplot2-violin-plot-quick-start-guide-r-software-and-data-visualization)：展示可以添加到小提琴图的各种自定义设置的资源。
