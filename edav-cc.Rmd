@@ -1,35 +1,966 @@
 ---
-title: "edav中文翻译"
+title: "EDAV中文翻译"
+author: "Bangwei Zhou, Zhihao Ai"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
+library(ggplot2)
+library(gridExtra)
 ```
 
-## R Markdown
+# 3 调查连续变量
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## 3.2 连续变量可能具有哪些特征？
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+可能有
 
-```{r cars}
-summary(cars)
+**不对称性** 分布可能偏向左或右，例如收入的分布。
+
+**离群值** 有一个或多个与远离其余数据的值。
+
+**多峰性** 分布具有一个以上的峰，例如，老忠实间歇泉数据中的两个变量。
+
+**空缺** 在某些值的范围内，数据中没有任何符合的个体。这在考试成绩的数据中可能发生，即没有任何低于及格线的分数。
+
+**堆积** 一些值过于经常地出现。出生体重是一个很好的例子[Clemons and Pagano，1999]。也许除了精确到克或盎司地称重新生儿，还有更重要的事……
+
+**舍入** 数据中仅有某些值（像整数），比如年龄的分布。
+
+**不可能值** 超出合理范围的值，例如年龄为负数。在UCI机器学习库的某一版本的皮马印第安人数据集[Bache and Lichman，2013]中，存在血压为零和皮肤厚度为零的情况。
+
+**错误值** 由于某种原因看上去有问题的值。在一个德国汽车保险数据集中，有一些驾驶员的出生年份表明他们小于16岁，因此他们无法获得驾照。这也是有可能的，因为为从未开车的人提供保险，将为他们建立几年没有索赔的历史！
+
+图形很适合展示构成数据分布形状的特征。相较于一组概括的统计量，他们可以提供更多和不同的信息。显然，最好同时使用这两种方法。
+
+对于单个变量，均值通常是最重要的统计量。T检验可能是最常用的用于检验均值的统计检验。如果数据来自正态分布，可以使用T检验。对于来自正态分布的小型数据集（T检验是特意为小样本设计的），数据可能看上去很不正态，这就是为什么正态性检验对T检验的效用和支持都很有限。幸运的是，T检验对于非正态性非常稳定。不过我们还是至少应该在进行分析前，检查数据是否有严重的非正态性。而用图形是最好的方法。
+
+## 3.5 哪些图可以展示单个连续变量？
+
+可以选用以下类型的图来展示连续的数据
+
+**直方图** 将数据分为多个区间，为每个区间绘制一个条形图，展示经验分布。
+
+**箱形图** 显示单个异常值和一些可靠的统计量，对于找出异常值和 比较各子组的分布很有帮助。
+
+**点图** 将每个点分别绘制为一个点，非常适合于发现数据中的空缺。
+
+**轴须图** 将每个点分别绘制为一条线，通常附加在另一个图的水平轴上。
+
+**密度估计** 绘制变量分布的估计密度，因此更像模型而不是数据展示。
+
+**分布估计** 显示估计的分布函数，如果一个分布总是在另一个分布的“前面”，则很适于比较这两个分布。
+
+**分位图** 比较分布与理论分布（通常是正态分布）
+
+还有其他可能性（例如，次数多边图，P-P图，平均偏移直方图，Shorth图，豆荚图）
+
+R的`plot`默认绘制变量与个体索引的散点图。这可能会有用（例如，显示数据是否已按升序排序或前几个值或最后几个值与其他值不同），但一般没用。不同的分析师可能偏爱不同的图，例如我喜欢直方图和箱形图。明显的特征大概率在所有图中都可以被发现。
+
+为了发现微妙的现象，探索性分析的最佳方法是绘制多种图。有一些一般性建议可以遵循，例如对于小型数据集，直方图效果不佳，对于大型数据集，点图效果不佳，对于多峰性，箱行图效果不佳，但一些明显不适当的图经常可以令人惊讶地展现一些信息。最重要的建议还是绘制多种图。
+
+如果数据高度不对称，考虑某些变换通常是明智，比如使用Box-Cox变换。图形显示可以帮助您评估任何变换的有效性，但他们无法告诉您是否这是否合理。您应该同时考虑如何解释转换后的变量及它的统计属性。
+
+
+## 3.6 绘图选项
+
+* *直方图的组距（和锚点）*
+
+有一些有趣而令人印象深刻的关于使用数据决定组距的文献。[Scott，1992]和Wand的文章（例如，[Wand，1997]）是可靠的来源。实际上，通常有很好的理由去选择在不是数学意义上最佳的特定组距。数据可能是以年为单位的年龄，以分钟为单位的时间或以英里为单位的距离。用一个非整数组距在数学上可能令人满意，但也可以隐藏有用的经验信息。重要的是要记住，直方图是用来展示数据的；它们并不适用于密度估计。有更好的方法估计生成数据的可能密度。要牢记的是，决定最佳直方图组距的方法会假设一个给定的锚点，比如第一个组的起点。这两个参数都应该用来优化。在他的**ggplot2**包中，Wickham并未尝试寻找任何”最佳“选择，而是使用30个组并显示一条说明如何更改组距的消息。这是实际的解决方案。
+
+* *不等组距*
+
+一些作者在介绍直方图时会指出可以使用不等的组距。虽然这个想法理论上很有吸引力，但在实际中应用很尴尬因为难以解释。如果你仍然想要这么做，请考虑变换变量。
+
+* *密度估计的带宽*
+
+组距对于直方图至关重要，而带宽对于密度估计至关重要。有很多R包提供不同的带宽公式，但很难说哪个值得推荐。尝试一些带宽会更有效。由于您可以在一个图上叠加多个密度估计，比较它们会很容易，只需使用不同的颜色使其突出即可。
+
+* *箱形图*
+
+Tukey对箱形图的定义区分了异常值（距离箱形超过1.5倍箱长度）和极端离群值（距离箱形超过3倍箱长度），而许多箱形图并不显示这个区别。其实令人沮丧的，存在许多不同的箱形图定义，因此您应该始终确认是哪一种被使用了。有些不标记离群值，有些使用标准差而不是可靠的统计量，存在各种各样的变化。
+
+同一窗口中的一组箱形图可以是同一变量的箱形图，每个子组一个，或不同变量的箱形图。有必要知道是哪种类型。分组的箱线图必须具有相同的尺度，并且其宽度是关于组大小的方程。不同变量的箱形图可能具有不同的尺度，每个个体出现在每个箱形图中（除了缺失值），因此无需考虑不同的宽度。
+
+## 3.7 连续变量的建模和检验
+
+1. 均值
+
+连续数据最常见的检验是通过某种方式检验均值，可能是相对于一个标准值，或与其他变量的均值相比较，或用子集。通常使用T检验。因为涉及该主题的文章太多，在此选择某一个参考是不公平的。另外，也可以检验中位数，特别是结合箱形图时。
+
+2. 对称性
+
+[Zheng and Gastwirth，2010]讨论了若干关于未知中位数的对称性检验，并提出自助抽样以提高检验的功效。
+
+3. 正态性
+
+有许多正态性测试（例如，Anderson-Darling，Shapiro-Wilk， Kolmogorov-Smirnov）。它们对小样本效果不好，对于特别大的样本又太过强烈。大样本往往具有某些特征导致零假设被拒绝。有一本书关于正态性检验[Thode Jr.，2002]，也有一个R包**nortest**提供了五种检验，加上R自带的**stats**包中Shapiro-Wilk检验。检验评估是否存在某些偏离正态的证据，而图形（尤其是分位图）有助于识别偏离正态的程度和类型。
+
+4. 密度估计
+
+R中有很多包提供各种形式的密度估计，因为太多不便全部列出。它们求出密度估计，但并不检验。选择您认为不错的一个（或多个）并使用它（或它们）。请记住，具有严格边界的变量密度（例如，无负数值）需要在边界处进行特殊处理。至少一个R包，**logspline**，为此问题提供了一个选项。大多数没有这么做。
+
+5. 离群值
+
+关于离群值的经典书籍[Barnett and Lewis，1994]描述了许多对于离群值的检验，它们主要用于单变量分布和个案。他们有多有用可能取决于特定的应用情景。像书中建议的，您需要注意掩盖（一组异常值使您无法识别另一个）和淹没（误把标准观测结果作为异常值）。
+
+6. 多峰性
+
+Good和Gaskin为寻找众数在一篇经常被引用的文章中[Good and Gaskins，1980]引入了“碰撞狩猎”（Bump-Hunting）一词。用于检验单峰性的浸入检验（dip test）在[Hartigan and Hartigan，1985]中被提出，可在R包**diptest**中找到。
+
+# 5 图表：柱形图
+
+## 5.1 概览
+
+本节介绍如何制作柱形图。
+
+## 5.2 柱形图的案例
+
+我们将使用柱形图来观察加拉帕戈斯群岛上雀科鸣鸟受外界因素影响而产生的变化：
+
+```{r echo=FALSE}
+library(Sleuth3) # data
+library(ggplot2) # plotting
+
+# load data
+finches <- Sleuth3::case0201
+# finch histograms by year with overlayed density curves
+ggplot(finches, aes(x = Depth, y = ..density..)) + 
+  # plotting
+  geom_histogram(bins = 20, colour = "#80593D", fill = "#9FC29F", boundary = 0) +
+  geom_density(color = "#3D6480") + 
+  facet_wrap(~Year) +
+  # formatting
+  ggtitle("Severe Drought Led to Finches with Bigger Chompers",
+          subtitle = "Beak Depth Density of Galapagos Finches by Year") +
+  labs(x = "Beak Depth (mm)", caption = "Source: Sleuth3::case0201") +
+  theme(plot.title = element_text(face = "bold")) +
+  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
+  theme(plot.caption = element_text(color = "grey68"))
 ```
 
-## Including Plots
+这是该代码:
+```{r eval=FALSE}
+library(Sleuth3) # 数据
+library(ggplot2) # 作图
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+# 加载数据
+finches <- Sleuth3::case0201
+# 雀科鸣鸟按年柱状图覆盖密度曲线
+ggplot(finches, aes(x = Depth, y = ..density..)) + 
+  # 作图
+  geom_histogram(bins = 20, colour = "#80593D", fill = "#9FC29F", boundary = 0) +
+  geom_density(color = "#3D6480") + 
+  facet_wrap(~Year) +
+  # 板式
+  ggtitle("Severe Drought Led to Finches with Bigger Chompers",
+          subtitle = "Beak Depth Density of Galapagos Finches by Year") +
+  labs(x = "Beak Depth (mm)", caption = "Source: Sleuth3::case0201") +
+  theme(plot.title = element_text(face = "bold")) +
+  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
+  theme(plot.caption = element_text(color = "grey68"))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## 5.3 简单案例
+
+我们使用一组非常简单的数据：
+
+```{r eval=FALSE}
+# 储存数据
+x <- c(50, 51, 53, 55, 56, 60, 65, 65, 68)
+```
+
+### 5.3.1 Base R中实现柱形图
+
+```{r eval=FALSE}
+# 作图
+hist(x, col = "lightblue", main = "Base R Histogram of x")
+```
+
+```{r echo=FALSE}
+x <- c(50, 51, 53, 55, 56, 60, 65, 65, 68)
+hist(x, col = "lightblue", main = "Base R Histogram of x")
+```
+
+Base R的好处在于容易设置，只需要填写数据`x`到代码`hist(x)`中即可。我们额外用`col=`和`main=`来添加了颜色让图表看起来更直观。
+
+### 5.3.2 使用ggplot2来实现柱形图
+
+
+```{r eval=FALSE}
+# 导入ggplot2包
+library(ggplot2)
+# 必须储存数据为数据帧
+df <- data.frame(x)
+
+# 作图
+ggplot(df, aes(x)) +
+  geom_histogram(color = "grey", fill = "lightBlue", 
+                 binwidth = 5, center = 52.5) +
+  ggtitle("ggplot2 histogram of x")
+```
+
+```{r echo=FALSE}
+x <- c(50, 51, 53, 55, 56, 60, 65, 65, 68)
+# 导入ggplot2包
+library(ggplot2)
+# 必须储存数据为数据帧
+df <- data.frame(x)
+
+# 作图
+ggplot(df, aes(x)) +
+  geom_histogram(color = "grey", fill = "lightBlue", 
+                 binwidth = 5, center = 52.5) +
+  ggtitle("ggplot2 histogram of x")
+```
+
+从表面上看，"ggplot2"的柱形图看起来更复杂，但也因此，能操作的空间更多。因为"ggplot"必须使用数据帧(dataframe)，所以如果你收到了错误指令如：
+
+```{r eval=FALSE}
+> ggplot(x,aes(halp_me_please)) + geom_point()
+```
+```{r eval=FALSE}
+Error: `data` must be a data frame, or other object coercible by `fortify()`, not a numeric vector
+```
+
+请确保你使用的是数据帧。
+
+## 5.4 柱形图理论
+
+柱形图是众多展示连续变量数据的一种图表。
+
+柱形图非常简洁，并能快速完成。柱形图往往自明、无需加以说明：柱形图能在范围区间内展示经验分布(empirical distribution)。柱形图可以在不需要额外操作的情况下，被用在未加工数据上快速获取数据分布。利用柱形图来得到最少操作情况下，最基础的数据分布情况。
+
+## 5.5 柱形图的种类
+
+用柱形图来展示一种连续变量的数据分布，但y轴可以用多种方式来表述：
+
+### 5.5.1 频率或次数
+
+y = 每个统计堆中的值数量
+
+### 5.5.2 相对频率柱形图
+
+y = 每个统计堆中的值数量/值数量的总数
+
+### 5.5.3 累积频率柱形图
+
+y = 值数量总数 <= (或 <) 统计堆的右边界
+
+### 5.5.4 密度
+
+y = 相对频率/统计堆宽度
+
+## 5.6 参数
+
+### 5.6.1 统计堆的边界值
+
+请注意统计堆的边界，以及某个数据点是否会在边界上落入左侧或右侧统计堆。
+
+```{r eval=FALSE}
+# format layout
+op <- par(mfrow = c(1, 2), las = 1)
+
+# right closed
+hist(x, col = "lightblue", ylim = c(0, 4),
+     xlab = "right closed ex. (55, 60]", font.lab = 2)
+# right open
+hist(x, col = "lightblue", right = FALSE, ylim = c(0, 4),
+     xlab = "right open ex. [55, 60)", font.lab = 2)
+```
+
+```{r echo=FALSE}
+# format layout
+op <- par(mfrow = c(1, 2), las = 1)
+
+# right closed
+hist(x, col = "lightblue", ylim = c(0, 4),
+     xlab = "right closed ex. (55, 60]", font.lab = 2)
+# right open
+hist(x, col = "lightblue", right = FALSE, ylim = c(0, 4),
+     xlab = "right open ex. [55, 60)", font.lab = 2)
+```
+
+### 5.6.2 统计堆数量
+
+`ggplot2`中的默认统计堆(bin)数量是30，但并不总是理想值；因此，如果当显示的柱形图看起来突兀时，请考虑更改统计堆数量。可以用`binwidth=`来特指宽度或用`bins=`来明确希望的统计堆数量
+
+```{r eval=FALSE}
+# default...note the pop-up about default bin number
+ggplot(finches, aes(x = Depth)) +
+  geom_histogram() +
+  ggtitle("Default with pop-up about bin number")
+```
+
+```{r}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+```{r echo=FALSE}
+# default...note the pop-up about default bin number
+ggplot(finches, aes(x = Depth)) +
+  geom_histogram() +
+  ggtitle("Default with pop-up about bin number")
+```
+
+以下是几个用上述两种方法来调整统计堆的例子：
+
+```{r eval=FALSE}
+# using binwidth
+p1 <- ggplot(finches, aes(x = Depth)) +
+  geom_histogram(binwidth = 0.5, boundary = 6) +
+  ggtitle("Changed binwidth value")
+# using bins
+p2 <- ggplot(finches, aes(x = Depth)) +
+  geom_histogram(bins = 48, boundary = 6) +
+  ggtitle("Changed bins value")
+
+# format plot layout
+library(gridExtra)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+```{r echo=FALSE}
+# using binwidth
+p1 <- ggplot(finches, aes(x = Depth)) +
+  geom_histogram(binwidth = 0.5, boundary = 6) +
+  ggtitle("Changed binwidth value")
+# using bins
+p2 <- ggplot(finches, aes(x = Depth)) +
+  geom_histogram(bins = 48, boundary = 6) +
+  ggtitle("Changed bins value")
+
+# format plot layout
+library(gridExtra)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## 5.6.3 统计堆校准
+
+确保x,y轴反映柱形图的真实边界。可以使用`boundary`指定任何bin的端点或中心以指代任何bin的中心。`ggplot2`可以自动计算如何防止其余统计堆的位置（此外，请注意，更改边界时，统计堆的数量会减少一倍。这是因为默认情况下，统计堆是居中的，且会超出/低于数据范围。
+
+```{r eval=FALSE}
+df <- data.frame(x)
+
+# default alignment
+ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Default Bin Alignment")
+```
+
+```{r echo=FALSE}
+df <- data.frame(x)
+
+# default alignment
+ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Default Bin Alignment")
+```
+
+```{r eval=FALSE}
+# specify alignment with boundary
+p3 <- ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5, boundary = 60,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Bin Alignment Using boundary")
+
+# specify alignment with center
+p4 <- ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5, center = 67.5,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Bin Alignment Using center")
+
+# format layout
+library(gridExtra)
+grid.arrange(p3, p4, ncol = 2)
+```
+
+```{r echo=FALSE}
+# specify alignment with boundary
+p3 <- ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5, boundary = 60,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Bin Alignment Using boundary")
+
+# specify alignment with center
+p4 <- ggplot(df, aes(x)) +
+  geom_histogram(binwidth = 5, center = 67.5,
+                 fill = "lightBlue", col = "black") +
+  ggtitle("Bin Alignment Using center")
+
+# format layout
+library(gridExtra)
+grid.arrange(p3, p4, ncol = 2)
+```
+
+注意：在校准统计堆时，不要同时使用`boundary=`和 `center=`。选择一个即可。
+
+## 5.7 用`ggvis`来实现交互式柱形图
+
+`ggvis`包目前尚未在开发中，但在某些方面做得很好，例如在编码时以交互方式来调整柱形图的参数。
+
+由于无法通过编制共享图像（与其他程序包一样，例如`plotly`)，因此我们在此处显示代码，但不显示输出。要使用他们，请复制到R中。
+
+### 5.7.1 交互式调整统计堆宽度
+
+```{r eval=FALSE}
+library(tidyverse)
+library(ggvis)
+faithful %>% ggvis(~eruptions) %>% 
+    layer_histograms(fill := "lightblue", 
+        width = input_slider(0.1, 2, value = .1, 
+                             step = .1, label = "width"))
+```
+
+### 5.7.2 GDP例子
+
+```{r eval=FALSE}
+df <-read.csv("countries2012.csv")
+df %>% ggvis(~GDP) %>% 
+    layer_histograms(fill := "green", 
+        width = input_slider(500, 10000, value = 5000, 
+        step = 500, label = "width"))
+```
+
+### 5.7.3 交互式调整统计堆中心
+
+```{r eval=FALSE}
+df <- data.frame(x = c(50, 51, 53, 55, 56, 60, 65, 65, 68))
+df %>% ggvis(~x) %>% 
+    layer_histograms(fill := "red", 
+        width = input_slider(1, 10, value = 5, step = 1, label = "width"),
+        center = input_slider(50, 55, value = 52.5, step = .5, label = "center"))
+```
+
+### 5.7.4 （显示数据的情况下）调整中心
+
+```{r eval=FALSE}
+df <- data.frame(x = c(50, 51, 53, 55, 56, 60, 65, 65, 68), 
+                 y = c(.5, .5, .5, .5, .5, .5, .5, 1.5, .5))
+df %>% ggvis(~x, ~y) %>% 
+    layer_histograms(fill := "lightcyan", width = 5,
+                     center = input_slider(45, 55, value = 45, 
+                                           step = 1, label = "center")) %>% 
+  layer_points(fill := "blue", size := 200) %>% 
+  add_axis("x", properties = axis_props(labels = list(fontSize = 20))) %>% 
+  scale_numeric("x", domain = c(46, 72)) %>% 
+  add_axis("y", values = 0:3, 
+           properties = axis_props(labels = list(fontSize = 20)))
+```
+
+### 5.7.5 交互式调整统计堆边界
+
+```{r eval=FALSE}
+df %>% ggvis(~x) %>% 
+    layer_histograms(fill := "red", 
+        width = input_slider(1, 10, value = 5, 
+                             step = 1, label = "width"),
+        boundary = input_slider(47.5, 50, value = 50,
+                                step = .5, label = "boundary"))
+```
+
+## 5.8 额外资源
+
+[柱形图文献](https://www.rdocumentation.org/packages/graphics/versions/3.5.0/topics/hist): Base R柱形图的文献页面。
+
+[ggplot2 备忘录](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf): 放在附件时可以方便使用。
+
+
+# 6 图表：盒形图
+
+## 6.1 盒形图介绍
+
+新生雏鸡的体重分布，基于他们获取的饲料补充而不同：
+```{r eval=FALSE}
+library(ggplot2)
+
+# boxplot by feed supplement 
+ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) + 
+  # plotting
+  geom_boxplot(fill = "#cc9a38", color = "#473e2c") + 
+  # formatting
+  ggtitle("Casein Makes You Fat?!",
+          subtitle = "Boxplots of Chick Weights by Feed Supplement") +
+  labs(x = "Feed Supplement", y = "Chick Weight (g)", caption = "Source: datasets::chickwts") +
+  theme_grey(16) +
+  theme(plot.title = element_text(face = "bold")) +
+  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
+  theme(plot.caption = element_text(color = "grey68"))
+```
+
+代码如下：
+
+```{r echo=FALSE}
+library(ggplot2)
+
+# boxplot by feed supplement 
+ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) + 
+  # plotting
+  geom_boxplot(fill = "#cc9a38", color = "#473e2c") + 
+  # formatting
+  ggtitle("Casein Makes You Fat?!",
+          subtitle = "Boxplots of Chick Weights by Feed Supplement") +
+  labs(x = "Feed Supplement", y = "Chick Weight (g)", caption = "Source: datasets::chickwts") +
+  theme_grey(16) +
+  theme(plot.title = element_text(face = "bold")) +
+  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
+  theme(plot.caption = element_text(color = "grey68"))
+```
+
+关于此数据集的更多信息，请在控制台输入`?datasets::chickwts`。
+
+## 6.2 更简单的案例
+
+### 6.2.1 单个盒形图
+
+Base R 可以给你提供非常快速的盒形图，只需很少的输入。
+
+```{r}
+# vector
+boxplot(rivers) 
+```
+
+或者是横向陈列的版本：
+
+```{r}
+# single column of a data frame
+boxplot(chickwts$weight, horizontal = TRUE) 
+```
+
+在**ggplot2**中制作单一盒形图有些麻烦。如果你只包含一个`aes`，`ggplot2`会自动当成`x`（组）变量，并且出现错误：
+
+```{r eval=FALSE}
+ggplot(chickwts, aes(weight)) + geom_boxplot()
+```
+
+```
+Error: stat_boxplot requires the following missing aesthetics: y
+```
+
+可以通过添加`y=`来表示重量是数字变量，但仍会得到毫无意义的x轴：
+
+```{r}
+ggplot(chickwts, aes(y = weight)) + 
+  geom_boxplot() +
+  theme_grey(16) # make all font sizes larger (default is 11)
+```
+
+另一种更简洁的方法是为单一组创建名称，作为`x`的取值并删除 x 轴标签：
+
+```{r}
+ggplot(chickwts, aes(x = "all 71 chickens", y = weight)) + 
+  geom_boxplot() + xlab("") + theme_grey(16)
+```
+
+### 6.2.2 对多个盒形图使用`ggplot2`
+
+要使用**ggplot2**创建多个盒形图，数据框必须是整洁的，也就是说，需要有一列包含分组变量级别的列。这一列可以是因数，字符，也可以是整数类。
+
+```{r}
+str(chickwts)
+```
+
+我们看到`chickwts`的格式是正确的：我们有一个`feed`列包含了两个因数级别，因此我们可以将`aes`中的`x`设置为`feed`。我们还可以按照渐减的中位数体重来排序：
+
+```{r}
+ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) +
+  geom_boxplot() +
+  xlab("feed type") +
+  theme_grey(16)
+```
+
+必须保证每个所需盒形图的值得单独列的数据框是整理好的。（更多关于 `tidy::gather()`的详细信息，可以参考[这个教程](https://github.com/jtr13/codehelp/blob/master/R/gather.md)）
+
+```{r}
+library(tidyverse)
+head(attitude)
+```
+
+```{r}
+tidyattitude <- attitude %>% gather(key = "question", value = "rating")
+head(tidyattitude)
+```
+
+现在，我们可以作图了：
+
+```{r}
+ggplot(tidyattitude, aes(reorder(question, -rating, median), rating)) + 
+  geom_boxplot() +
+  xlab("question short name") +
+  theme_grey(16)
+```
+
+## 6.3 盒形图理论
+
+这是Hadley Wickham的一段话，很好总结了盒形图：
+
+>箱线图是紧凑的分布摘要，与直方图或核密度相比，显示的详细信息较少，但占用的空间也较小。箱线图使用健康的汇总统计信息，这些统计信息始终位于实际数据点，可快速计算（最初是手工计算），并且没有调整参数。它们对于比较组之间的分布特别有用。 -Hadley Wickham
+
+箱线图的另一个重要用途是显示异常值。箱线图显示了四分位数和栅栏数据点的离群值。当具有异常值的数据时，请使用箱线图，以便可以将其暴露出来。它缺乏特异性的情况被它能够清晰汇总大型数据集的能力所弥补。
+
+## 6.4 什么时候使用盒形图
+
+盒形图应该被用于显示连续变量。它们对于识别异常值和比较不同数据组特别有帮助。
+
+## 6.5 盒形图的考虑点
+
+## 6.5.1 翻转方向
+
+通常，盒形图应该是水平方向的。在`ggplot2`中非常容易操作：只需要加上`+ coord_flip()`，并在重新排序的公式中删除`-`符号，即可使具有高中文书的层级放在首位：
+
+```{r}
+ggplot(tidyattitude, aes(reorder(question, rating, median), rating)) + 
+  geom_boxplot() +
+  coord_flip() +
+  xlab("question short name") +
+  theme_grey(16)
+```
+
+特别注意，仅改变`x`和`y`而不是`coord_flip()`不会起到效果。
+
+```{r}
+ggplot(tidyattitude, aes(rating, reorder(question, rating, median))) + 
+  geom_boxplot() +
+  ggtitle("This is not what we wanted!") +
+  ylab("question short name") +
+  theme_grey(16)
+```
+
+### 6.5.2 **不能**用于分类数据
+
+盒形图很好，但是他们不适用于分类数据。使用盒形图之前，请确保处理的数据是连续变量的。
+
+## 6.6 补充资料
+
+Tukey, John W. 1977. [Exploratory Data Analysis.](https://clio.columbia.edu/catalog/136422) Addison-Wesley. (Chapter 2): the primary source in which boxplots are first presented. 
+
+[Article on boxplots with ggplot2](http://t-redactyl.io/blog/2016/04/creating-plots-in-r-using-ggplot2-part-10-boxplots.html): An excellent collection of code examples on how to make boxplots with ggplot2. Covers layering, working with legends, faceting, formatting, and more. If you want a boxplot to look a certain way, this article will help. 
+
+[Boxplots with plotly package](https://plot.ly/ggplot2/box-plots/): boxplot examples using the plotly package. These allow for a little interactivity on hover, which might better explain the underlying statistics of your plot.
+
+[ggplot2 Boxplot: Quick Start Guide](http://www.sthda.com/english/wiki/ggplot2-box-plot-quick-start-guide-r-software-and-data-visualization): Article from STHDA on making boxplots using ggplot2. Excellent starting point for getting immediate results and custom formatting.
+
+[ggplot2 cheatsheet](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf): Always good to have close by.
+
+[Hadley Wickhan and Lisa Stryjewski on boxplots](http://vita.had.co.nz/papers/boxplots.pdf): good for understanding basics of more complex boxplots and some of the history behind them.
+
+
+# 7 图表：小提琴图
+
+## 7.1 本节介绍如何制作小提琴图。
+
+## 7.2 R中的一些例子
+
+我们调用`datasets`包中的`chickwts`，使用`ggplot2`绘制一副小提琴图。
+
+```{r echo=FALSE}
+# import ggplot and the Datasets Package
+library(datasets)
+library(ggplot2)
+
+supps <- c("horsebean", "linseed", "soybean", "meatmeal", "sunflower", "casein")
+
+# plot data
+
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)")
+```
+
+这是该代码:
+```{r eval=FALSE}
+# import ggplot and the Datasets Package
+library(datasets)
+library(ggplot2)
+
+supps <- c("horsebean", "linseed", "soybean", "meatmeal", "sunflower", "casein")
+
+# plot data
+
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)")
+```
+
+## 7.3 将统计量添加到小提琴图中
+
+### 7.3.1 添加中位数和四分位距
+
+我们可以将中位数和四分位距加到小提琴图上
+
+```{r eval=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+   geom_boxplot(width=0.1)
+```
+
+```{r echo=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+   geom_boxplot(width=0.1)
+```
+
+我们只需添加一个箱形图即可。
+
+### 7.3.2 数据显示为点
+
+```{r eval=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+  geom_dotplot(binaxis='y', dotsize=0.5, stackdir='center')
+```
+
+```{r echo=FALSE}
+ggplot(chickwts, aes(x = factor(feed, levels = supps), 
+                     y = weight)) + 
+  # plotting
+  geom_violin(fill = "lightBlue", color = "#473e2c") + 
+  labs(x = "Feed Supplement", y = "Chick Weight (g)") + 
+  geom_dotplot(binaxis='y', dotsize=0.5, stackdir='center')
+```
+
+## 7.4 描述
+
+小提琴图类似于箱形图。它较箱形图的优势在于，可以同时可视化数据的分布和概率密度。我们可以将小提琴图视为箱形图和核密度图的结合。
+
+小提琴图可以让我们看到数据是单峰，双峰还是多峰。这些简单的细节无法在箱形图中看到。可以通过小提琴图的宽度看出分布。
+
+## 7.5 何时使用
+
+小提琴图仅应用于显示连续变量。
+
+## 7.6 外部资源
+
+[ggplot2小提琴图](http://www.sthda.com/english/wiki/ggplot2-violin-plot-quick-start-guide-r-software-and-data-visualization)：展示可以添加到小提琴图的各种自定义设置的资源。
+
+
+# 8 图表：山脊线图
+
+## 8.1 概括
+
+本章节介绍如何制作山脊线图。
+
+## 8.2 山脊线图介绍
+
+下面是对于受试者口服茶碱的茶碱浓度的观察：
+```{r eval=FALSE}
+library("ggridges")
+library("tidyverse")
+Theoph_data <- Theoph
+ggplot(Theoph_data, aes(x=Dose,y=Subject,fill=Subject))+
+  geom_density_ridges_gradient(scale = 4, show.legend = FALSE) + theme_ridges() +
+  scale_y_discrete(expand = c(0.01, 0)) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  labs(x = "Dose of theophylline(mg/kg)",y = "Subject #") +
+  ggtitle("Density estimation of dosage given to various subjects") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+代码如下：
+
+```{r echo=FALSE}
+library("ggridges")
+library("tidyverse")
+Theoph_data <- Theoph
+ggplot(Theoph_data, aes(x=Dose,y=Subject,fill=Subject))+
+  geom_density_ridges_gradient(scale = 4, show.legend = FALSE) + theme_ridges() +
+  scale_y_discrete(expand = c(0.01, 0)) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  labs(x = "Dose of theophylline(mg/kg)",y = "Subject #") +
+  ggtitle("Density estimation of dosage given to various subjects") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+对于该数据集更多的信息，请在控制台中打入`?datasets::Theoph`。
+
+## 8.3 简单案例
+
+让我们使用`datasets`包中的`orange`数据集：
+
+```{r}
+library("datasets")
+head(Orange, n=5)
+```
+
+## 8.4 通过`ggridge`使用山脊线图
+
+```{r}
+library("ggridges")
+library("tidyverse")
+ggplot(Orange, aes(x=circumference,y=Tree,fill = Tree))+
+  geom_density_ridges(scale = 2, alpha=0.5) + theme_ridges()+
+  scale_fill_brewer(palette = 4)+
+  scale_y_discrete(expand = c(0.8, 0)) +
+  scale_x_continuous(expand = c(0.01, 0))+
+  labs(x="Circumference at Breast Height", y="Tree with ordering of max diameter")+
+  ggtitle("Density estimation of circumference of different types of Trees")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+`ggridge`主要使用两个主要`geom`来绘制山脊线密度图:`geom_density_ridges`和`geom_ridgeline`。它们用于绘制分类变量的密度，并查看它们在连续尺度上的分布。
+
+## 8.5 什么时候使用
+
+当必须在同一水平比例上绘制多个数据段时，可以使用山脊线图。它呈现时略有重叠。脊线图对于可视化类别变量随时间或空间的分布非常有用。
+
+使用山脊线图的一个很好的例子是可视化公司中不同部门之间的工资分配。
+
+## 8.6 山脊线图的考虑
+
+密度图的重叠可以通过调整比例值来控制。比例尺定义了下部曲线的峰与上部曲线的接触量。
+
+```{r}
+library("ggridges")
+library("tidyverse")
+OrchardSprays_data <- OrchardSprays
+ggplot(OrchardSprays_data, aes(x=decrease,y=treatment,fill=treatment))+
+  geom_density_ridges_gradient(scale=3) + theme_ridges()+
+  scale_y_discrete(expand = c(0.3, 0)) +
+  scale_x_continuous(expand = c(0.01, 0))+
+  labs(x="Response in repelling honeybees",y="Treatment")+
+  ggtitle("Density estimation of response by honeybees to a treatment for scale=3")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+ggplot(OrchardSprays_data, aes(x=decrease,y=treatment,fill=treatment))+
+  geom_density_ridges_gradient(scale=5) + theme_ridges()+
+  scale_y_discrete(expand = c(0.3, 0)) +
+  scale_x_continuous(expand = c(0.01, 0))+
+  labs(x="Response in repelling honeybees",y="Treatment")+
+  ggtitle("Density estimation of response by honeybees to a treatment for scale=5")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+脊线图也可以用于在公共水平轴上绘制直方图，而不是密度图。但是这样做可能不会给我们带来任何有价值的结果。
+
+```{r}
+library("ggridges")
+library("tidyverse")
+ggplot(InsectSprays, aes(x = count, y = spray, height = ..density.., fill = spray)) + 
+  geom_density_ridges(stat = "binline", bins = 20, scale = 0.7, draw_baseline = FALSE)
+```
+
+如果在山脊线图中执行相同操作，则可以得到更好结果。
+```{r}
+library("ggridges")
+library("tidyverse")
+ggplot(InsectSprays, aes(x=count,y=spray,fill=spray))+
+  geom_density_ridges_gradient() + theme_ridges()+
+  labs(x="Count of Insects",y="Types of Spray")+
+  ggtitle("The counts of insects treated with different insecticides.")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## 8.7 补充资源
+
+[Introduction to ggridges](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html): An excellent collection of code examples on how to make ridgeline plots with ggplot2. Covers every parameter of ggridges and how to modify them for better visualization. If you want a ridgeline plot to look a certain way, this article will help.
+
+[Article on ridgeline plots with ggplot2](https://rdrr.io/cran/ggridges/man/geom_density_ridges.html): Few examples using different examples. Great for starting with ridgeline plots.
+
+[History of Ridgeline plots](https://blog.revolutionanalytics.com/2017/07/joyplots.html): To refer to the theory of ridgeline plots.
+
+
+# 9 图表：QQ图
+
+## 9.1 介绍
+
+在统计中，Q-Q分为图算作概率图。是一种图形化方法，用于通过绘制两个分位数彼此的分位数来比较两个概率分布。绘图上的点（x，y）对应于相对于第一分布（x坐标）的相同分位数绘制的第二分布（y坐标）的分位数之一。因此，该线是参数为参数曲线，该参数为分位数的间隔数。
+
+## 9.2 解读QQ图
+
+## 9.3 是否常态（qqnorm的案例）
+
+### 9.3.1 常态 QQ图
+
+```{r}
+x <- rnorm(1000, 50, 10)
+qqnorm(x)
+qqline(x, col = "red")
+```
+
+这些点都沿着一条直线排列。注意，x轴绘制了理论分位数。这些是标准正态分布的均值0和标准差1的分位数。
+
+## 9.3.2 非常态 QQ图
+
+```{r}
+x <- rexp(1000, 5)
+qqnorm(x)
+qqline(x, col = "red")
+```
+
+需要注意的是，这些点形成的是曲线而不是直线。看起来像这样的Q-Q图通常意味着样本数据有偏斜。
+
+## 9.4 不同类别的QQ图
+
+以下图形（来源：[Stack Exchange](https://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot/)）是对所有QQ图的总结：
+
+![](./imgs/qqplot_types.png) 
+
+
+
+* **正态QQ图**：正态分布是对称的，因此没有偏斜（均值等于中位数）。
+
+* **右偏QQ图**：右偏也称为正偏。
+
+* **左偏QQ图**：左偏也称为负偏。
+
+* **轻尾qqplot**：与正态分布相比，位于分布极端处的数据较少，而在分布中心的数据较少。
+
+* **重尾qqplot**：与正态分布相比，位于分布极端处的数据更多，而在分布中心的数据更少。
+
+* **双峰模型qqplot**：说明双峰分布。
+
+## 9.5 用`ggplot`来绘制QQ图
+
+为了使用`ggplot2`绘制QQ图，我们必须使用数据帧，因此在这里我们将其转换为一个。我们可以看到，使用`ggplot`绘制QQ图具有与使用`qqnorm`类似的结果。
 
 ```{r}
 library(ggplot2)
+x <- rnorm(1000, 50, 10)
+x <- data.frame(x)
+ggplot(x, aes(sample = x)) +
+  stat_qq() +
+  stat_qq_line()
 ```
+
+但是，当我们需要绘制不同的数据组时，`ggplot`会对按因子进行着色非常有帮助。
+
+```{r}
+library(ggplot2)
+ggplot(mtcars, aes(sample = mpg, colour = factor(cyl))) +
+  stat_qq() +
+  stat_qq_line()
+```
+
+## 9.6 参考
+
+[Understanding Q-Q Plots](https://data.library.virginia.edu/understanding-q-q-plots/): A discussion from the University of Virginia Library on qqplots.
+
+[How to interpret a QQ plot](https://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot): Another resource for interpreting qqplots.
+
+[A QQ Plot Dissection Kit](http://seankross.com/2016/02/29/A-Q-Q-Plot-Dissection-Kit.html): An excellent walkthrough on qqplots by Sean Kross.
+
+[Probability plotting methods for the analysis of data](https://www.jstor.org/stable/2334448?seq=1#metadata_info_tab_contents): Paper on plotting techniques, which discusses qqplots. (Wilk, M.B.; Gnanadesikan, R. (1968))
+
+[QQ-Plot Wiki](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot#cite_note-1): Wikipedia entry on qqplots
+
 
 # 1 鲍鱼分析
 
@@ -93,744 +1024,3 @@ e. 最后，结合 (b), (c), (d) 三张图，我们可以做以下总结：
 1. 从(b)的刻面柱状图中，我们看出公鲍鱼和母鲍鱼的壳重量分布非常近似，但婴儿鲍鱼的峰值更小（大概在0.25左右，相比于成年鲍鱼的峰值小了一半），并分布范围也窄许多。三张刻面图都右偏，但单从柱状图中，我们很难看出异常值。
 2. 因此，我们选择作一张基于性别的盒形图。从(c)的盒形图中，我们发现如柱形图表现的那样，公鲍鱼和母鲍鱼的壳重量分布非常相似，但母鲍鱼有略高的中位数，而公鲍鱼有更多的异常值。同时，我们发现婴儿鲍鱼“盒子”结束的地方，是成年鲍鱼“盒子”开始的地方。换句话说，75%的末端婴儿鲍鱼壳重量在成年鲍鱼25%的数据范围中。最后，在盒形图中，我们还能发现婴儿鲍鱼和成年鲍鱼的壳重量异常值并没有重叠。
 3. 最后，从(d)的密度曲线图中，我们再次发现公鲍鱼和母鲍鱼密度曲线的相似度。密度曲线图弥补了盒形图的不足。在盒形图中，我们无法看到不同分位数中的分布。与柱形图类似，我们看到婴儿鲍鱼的峰值比成年鲍鱼的峰值要小许多，同时分布范围也窄很多。在婴儿鲍鱼的密度曲线峰值区域，我们看到有个凹陷，这也许是双峰性的情况，但我们无法论证。同时，我们也注意到母鲍鱼的密度曲线峰值要比公鲍鱼高一些，但公鲍鱼的密度曲线有一个更宽的右尾。三个性别的密度曲线图都是右偏。
-
-
-# 5 图表：柱形图图
-
-## 5.1 本节介绍如何制作柱形图图。
-
-## 5.2 柱形图的案例
-
-我们将使用柱形图来观察加拉帕戈斯群岛上雀科鸣鸟受外界因素影响而产生的变化：
-
-```{r echo=FALSE}
-library(Sleuth3) # data
-library(ggplot2) # plotting
-
-# load data
-finches <- Sleuth3::case0201
-# finch histograms by year with overlayed density curves
-ggplot(finches, aes(x = Depth, y = ..density..)) + 
-  # plotting
-  geom_histogram(bins = 20, colour = "#80593D", fill = "#9FC29F", boundary = 0) +
-  geom_density(color = "#3D6480") + 
-  facet_wrap(~Year) +
-  # formatting
-  ggtitle("Severe Drought Led to Finches with Bigger Chompers",
-          subtitle = "Beak Depth Density of Galapagos Finches by Year") +
-  labs(x = "Beak Depth (mm)", caption = "Source: Sleuth3::case0201") +
-  theme(plot.title = element_text(face = "bold")) +
-  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
-  theme(plot.caption = element_text(color = "grey68"))
-```
-
-这是该代码:
-```{r eval=FALSE}
-library(Sleuth3) # 数据
-library(ggplot2) # 作图
-
-# 加载数据
-finches <- Sleuth3::case0201
-# 雀科鸣鸟按年柱状图覆盖密度曲线
-ggplot(finches, aes(x = Depth, y = ..density..)) + 
-  # 作图
-  geom_histogram(bins = 20, colour = "#80593D", fill = "#9FC29F", boundary = 0) +
-  geom_density(color = "#3D6480") + 
-  facet_wrap(~Year) +
-  # 板式
-  ggtitle("Severe Drought Led to Finches with Bigger Chompers",
-          subtitle = "Beak Depth Density of Galapagos Finches by Year") +
-  labs(x = "Beak Depth (mm)", caption = "Source: Sleuth3::case0201") +
-  theme(plot.title = element_text(face = "bold")) +
-  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
-  theme(plot.caption = element_text(color = "grey68"))
-```
-
-## 5.3 简单案例
-
-我们使用一组非常简单的数据：
-
-```{r eval=FALSE}
-# 储存数据
-x <- c(50, 51, 53, 55, 56, 60, 65, 65, 68)
-```
-
-### 5.3.1 Base R 中实现柱形图
-
-```{r eval=FALSE}
-# 作图
-hist(x, col = "lightblue", main = "Base R Histogram of x")
-```
-
-Base R的好处在于容易设置，只需要填写数据"x"到公式hist(x)中即可。我们额外用"col=" 和 "main=" 来添加了颜色让图表看起来更直观。
-
-### 5.3.2 使用"ggplot2"来实现柱形图
-
-
-```{r eval=FALSE}
-# 导入ggplot2包
-library(ggplot2)
-# 必须储存数据为数据帧
-df <- data.frame(x)
-
-# 作图
-ggplot(df, aes(x)) +
-  geom_histogram(color = "grey", fill = "lightBlue", 
-                 binwidth = 5, center = 52.5) +
-  ggtitle("ggplot2 histogram of x")
-```
-
-```{r echo=FALSE}
-# 导入ggplot2包
-library(ggplot2)
-# 必须储存数据为数据帧
-df <- data.frame(x)
-
-# 作图
-ggplot(df, aes(x)) +
-  geom_histogram(color = "grey", fill = "lightBlue", 
-                 binwidth = 5, center = 52.5) +
-  ggtitle("ggplot2 histogram of x")
-```
-
-从表面上看，"ggplot2"的柱形图看起来更复杂，但也因此，能操作的空间更多。因为"ggplot"必须使用数据帧(dataframe)，所以如果你收到了错误指令如：
-
-```{r}
-ggplot(x,aes(halp_me_please)) + geom_point()
-Error: `data` must be a data frame, or other object coercible by `fortify()`, not a numeric vector
-```
-
-请确保你使用的是数据帧。
-## 5.4 柱形图理论
-
-柱形图是众多展示连续变量数据的一种图表。
-
-柱形图非常简洁，并能快速完成。柱形图往往自明、无需加以说明：柱形图能在范围区间内展示经验分布(empirical distribution)。柱形图可以在不需要额外操作的情况下，被用在未加工数据上快速获取数据分布。利用柱形图来得到最少操作情况下，最基础的数据分布情况。
-
-## 5.5 柱形图的种类
-
-用柱形图来展示一种连续变量的数据分布，但y轴可以用多种方式来表述：
-
-## 5.5.1 频率或次数
-
-y = 每个统计堆中的值数量
-
-## 5.5.2 相对频率柱形图
-
-y = 每个统计堆中的值数量/值数量的总数
-
-## 5.5.3 累积频率柱形图
-
-y = 值数量总数 <= (或 <) 统计堆的右边界
-
-## 5.5.4 密度
-
-y = 相对频率/统计堆宽度
-
-## 5.6 参数
-
-## 5.6.1 统计堆的边界值
-
-请注意统计堆的边界，以及某个数据点是否会在边界上落入左侧或右侧统计堆。
-
-```{r eval=FALSE}
-# format layout
-op <- par(mfrow = c(1, 2), las = 1)
-
-# right closed
-hist(x, col = "lightblue", ylim = c(0, 4),
-     xlab = "right closed ex. (55, 60]", font.lab = 2)
-# right open
-hist(x, col = "lightblue", right = FALSE, ylim = c(0, 4),
-     xlab = "right open ex. [55, 60)", font.lab = 2)
-```
-
-```{r echo=FALSE}
-# format layout
-op <- par(mfrow = c(1, 2), las = 1)
-
-# right closed
-hist(x, col = "lightblue", ylim = c(0, 4),
-     xlab = "right closed ex. (55, 60]", font.lab = 2)
-# right open
-hist(x, col = "lightblue", right = FALSE, ylim = c(0, 4),
-     xlab = "right open ex. [55, 60)", font.lab = 2)
-```
-
-## 5.6.2 统计堆数量
-
-"ggplot2"中的默认统计堆(bin)数量是30，但并不总是理想值；因此，如果当显示的柱形图看起来突兀时，请考虑更改统计堆数量。可以用"binwidth="来特指宽度或用"bins="来明确希望的统计堆数量
-
-```{r eval=FALSE}
-# default...note the pop-up about default bin number
-ggplot(finches, aes(x = Depth)) +
-  geom_histogram() +
-  ggtitle("Default with pop-up about bin number")
-```
-
-```{r echo=FALSE}
-# default...note the pop-up about default bin number
-ggplot(finches, aes(x = Depth)) +
-  geom_histogram() +
-  ggtitle("Default with pop-up about bin number")
-```
-
-以下是几个用上述两种方法来调整统计堆的例子：
-
-```{r eval=FALSE}
-# using binwidth
-p1 <- ggplot(finches, aes(x = Depth)) +
-  geom_histogram(binwidth = 0.5, boundary = 6) +
-  ggtitle("Changed binwidth value")
-# using bins
-p2 <- ggplot(finches, aes(x = Depth)) +
-  geom_histogram(bins = 48, boundary = 6) +
-  ggtitle("Changed bins value")
-
-# format plot layout
-library(gridExtra)
-grid.arrange(p1, p2, ncol = 2)
-```
-
-```{r echo=FALSE}
-# using binwidth
-p1 <- ggplot(finches, aes(x = Depth)) +
-  geom_histogram(binwidth = 0.5, boundary = 6) +
-  ggtitle("Changed binwidth value")
-# using bins
-p2 <- ggplot(finches, aes(x = Depth)) +
-  geom_histogram(bins = 48, boundary = 6) +
-  ggtitle("Changed bins value")
-
-# format plot layout
-library(gridExtra)
-grid.arrange(p1, p2, ncol = 2)
-```
-
-## 5.6.3 统计堆校准
-
-确保x,y轴反映柱形图的真实边界。可以使用boundary指定任何bin的端点或中心以指代任何bin的中心。"ggplot2"可以自动计算如何防止其余统计堆的位置（此外，请注意，更改边界时，统计堆的数量会减少一倍。这是因为默认情况下，统计堆是居中的，且会超出/低于数据范围。
-
-```{r eval=FALSE}
-df <- data.frame(x)
-
-# default alignment
-ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Default Bin Alignment")
-```
-
-```{r echo=FALSE}
-df <- data.frame(x)
-
-# default alignment
-ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Default Bin Alignment")
-```
-
-```{r eval=FALSE}
-# specify alignment with boundary
-p3 <- ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5, boundary = 60,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Bin Alignment Using boundary")
-
-# specify alignment with center
-p4 <- ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5, center = 67.5,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Bin Alignment Using center")
-
-# format layout
-library(gridExtra)
-grid.arrange(p3, p4, ncol = 2)
-```
-
-```{r echo=FALSE}
-# specify alignment with boundary
-p3 <- ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5, boundary = 60,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Bin Alignment Using boundary")
-
-# specify alignment with center
-p4 <- ggplot(df, aes(x)) +
-  geom_histogram(binwidth = 5, center = 67.5,
-                 fill = "lightBlue", col = "black") +
-  ggtitle("Bin Alignment Using center")
-
-# format layout
-library(gridExtra)
-grid.arrange(p3, p4, ncol = 2)
-```
-
-注意：在校准统计堆时，不要同时使用"boundary=" 和 "center="。选择一个即可。
-
-## 5.7 用"ggvis"来实现交互式柱形图
-
-"ggvis"包目前尚未在开发中，但在某些方面做得很好，例如在编码时以交互方式来调整柱形图的参数。
-
-由于无法通过编制共享图像（与其他程序包一样，例如plotly)，因此我们在此处显示代码，但不显示输出。要使用他们，请复制到R中。
-
-## 5.7.1 交互式调整统计堆宽度
-
-```{r}
-library(tidyverse)
-library(ggvis)
-faithful %>% ggvis(~eruptions) %>% 
-    layer_histograms(fill := "lightblue", 
-        width = input_slider(0.1, 2, value = .1, 
-                             step = .1, label = "width"))
-```
-
-## 5.7.2 GDP例子
-
-```{r}
-df <-read.csv("countries2012.csv")
-df %>% ggvis(~GDP) %>% 
-    layer_histograms(fill := "green", 
-        width = input_slider(500, 10000, value = 5000, 
-        step = 500, label = "width"))
-```
-
-## 5.7.3 交互式调整统计堆中心
-
-```{r}
-df <- data.frame(x = c(50, 51, 53, 55, 56, 60, 65, 65, 68))
-df %>% ggvis(~x) %>% 
-    layer_histograms(fill := "red", 
-        width = input_slider(1, 10, value = 5, step = 1, label = "width"),
-        center = input_slider(50, 55, value = 52.5, step = .5, label = "center"))
-```
-
-## 5.7.4 （显示数据的情况下）调整中心
-
-```{r}
-df <- data.frame(x = c(50, 51, 53, 55, 56, 60, 65, 65, 68), 
-                 y = c(.5, .5, .5, .5, .5, .5, .5, 1.5, .5))
-df %>% ggvis(~x, ~y) %>% 
-    layer_histograms(fill := "lightcyan", width = 5,
-                     center = input_slider(45, 55, value = 45, 
-                                           step = 1, label = "center")) %>% 
-  layer_points(fill := "blue", size := 200) %>% 
-  add_axis("x", properties = axis_props(labels = list(fontSize = 20))) %>% 
-  scale_numeric("x", domain = c(46, 72)) %>% 
-  add_axis("y", values = 0:3, 
-           properties = axis_props(labels = list(fontSize = 20)))
-```
-
-## 5.7.5 交互式调整统计堆边界
-
-```{r}
-df %>% ggvis(~x) %>% 
-    layer_histograms(fill := "red", 
-        width = input_slider(1, 10, value = 5, 
-                             step = 1, label = "width"),
-        boundary = input_slider(47.5, 50, value = 50,
-                                step = .5, label = "boundary"))
-```
-
-## 5.8 额外资源
-
-柱形图文献 (https://www.rdocumentation.org/packages/graphics/versions/3.5.0/topics/hist): base R 柱形图的文献页面。
-ggplot2 备忘录 (https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf): 放在附件时可以方便使用。
-
-## 6 图表：盒形图
-
-## 6.1 盒形图介绍
-
-新生雏鸡的体重分布，基于他们获取的饲料补充而不同：
-```{r eval=FALSE}
-library(ggplot2)
-
-# boxplot by feed supplement 
-ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) + 
-  # plotting
-  geom_boxplot(fill = "#cc9a38", color = "#473e2c") + 
-  # formatting
-  ggtitle("Casein Makes You Fat?!",
-          subtitle = "Boxplots of Chick Weights by Feed Supplement") +
-  labs(x = "Feed Supplement", y = "Chick Weight (g)", caption = "Source: datasets::chickwts") +
-  theme_grey(16) +
-  theme(plot.title = element_text(face = "bold")) +
-  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
-  theme(plot.caption = element_text(color = "grey68"))
-```
-
-代码如下：
-
-```{r echo=FALSE}
-library(ggplot2)
-
-# boxplot by feed supplement 
-ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) + 
-  # plotting
-  geom_boxplot(fill = "#cc9a38", color = "#473e2c") + 
-  # formatting
-  ggtitle("Casein Makes You Fat?!",
-          subtitle = "Boxplots of Chick Weights by Feed Supplement") +
-  labs(x = "Feed Supplement", y = "Chick Weight (g)", caption = "Source: datasets::chickwts") +
-  theme_grey(16) +
-  theme(plot.title = element_text(face = "bold")) +
-  theme(plot.subtitle = element_text(face = "bold", color = "grey35")) +
-  theme(plot.caption = element_text(color = "grey68"))
-```
-
-关于此数据集的更多信息，请在控制台输入" ?datasets::chickwts"。
-
-## 6.2 更简单的案例
-
-## 6.2.1 单个盒形图
-
-Base R 可以给你提供非常快速的盒形图，只需很少的输入。
-
-```{r}
-# vector
-boxplot(rivers) 
-```
-
-或者是横向陈列的版本：
-
-```{r}
-# single column of a data frame
-boxplot(chickwts$weight, horizontal = TRUE) 
-```
-
-在"ggplot2"中制作单一盒形图有些麻烦。如果你只包含一个"aesthetic function”，"ggplot2"会自动当成x（组）变量，并且出现错误：
-
-```{r}
-ggplot(chickwts, aes(weight)) + geom_boxplot()
-```
-
-Error: stat_boxplot requires the following missing aesthetics: y
-
-可以通过添加"y=" 来表示重量是数字变量，但仍会得到毫无意义的x轴：
-
-```{r}
-ggplot(chickwts, aes(y = weight)) + 
-  geom_boxplot() +
-  theme_grey(16) # make all font sizes larger (default is 11)
-```
-
-另一种更简洁的方法是为单一组创建名称，作为 "x aesthetic" 并删除 x 轴标签：
-
-```{r}
-ggplot(chickwts, aes(x = "all 71 chickens", y = weight)) + 
-  geom_boxplot() + xlab("") + theme_grey(16)
-```
-
-## 6.2.2 对多个盒形图使用"ggplot2"
-
-要使用"ggplot2"创建多个盒形图，数据框必须是整洁的，也就是说，需要有一列包含分组变量级别的列。这一列可以是因数，字符，也可以是整数类。
-
-```{r}
-str(chickwts)
-```
-
-我们看到"chickwts"的格式是正确的：我们有一个"feed"列包含了两个因数级别，因此我们可以将"x aesthetic"设置为 "feed"。我们还可以按照渐减的中位数体重来排序：
-
-```{r}
-ggplot(chickwts, aes(x = reorder(feed, -weight, median), y = weight)) +
-  geom_boxplot() +
-  xlab("feed type") +
-  theme_grey(16)
-```
-
-必须保证每个所需盒形图的值得单独列的数据框是整理好的。（更多关于 "tidy::gather()" 的详细信息，可以参考这个教程：https://github.com/jtr13/codehelp/blob/master/R/gather.md）
-
-```{r}
-library(tidyverse)
-head(attitude)
-```
-
-```{r}
-tidyattitude <- attitude %>% gather(key = "question", value = "rating")
-head(tidyattitude)
-```
-
-现在，我们可以作图了：
-
-```{r}
-ggplot(tidyattitude, aes(reorder(question, -rating, median), rating)) + 
-  geom_boxplot() +
-  xlab("question short name") +
-  theme_grey(16)
-```
-
-## 6.3 盒形图理论
-
-这是Hadley Wickham的一段话，很好总结了盒形图：
-箱线图是紧凑的分布摘要，与直方图或核密度相比，显示的详细信息较少，但占用的空间也较小。箱线图使用健康的汇总统计信息，这些统计信息始终位于实际数据点，可快速计算（最初是手工计算），并且没有调整参数。它们对于比较组之间的分布特别有用。 -Hadley Wickham
-
-箱线图的另一个重要用途是显示异常值。箱线图显示了四分位数和栅栏数据点的离群值。当具有异常值的数据时，请使用箱线图，以便可以将其暴露出来。它缺乏特异性的情况被它能够清晰汇总大型数据集的能力所弥补。
-
-## 6.4 什么时候使用盒形图
-
-盒形图应该被用于显示连续变量。它们对于识别异常值和比较不同数据组特别有帮助。
-
-## 6.5 盒形图的考虑点
-
-## 6.5.1 翻转方向
-
-通常，盒形图应该是水平方向的。在"ggplot2"中非常容易操作：只需要加上 "+ coord_flip()"，并在重新排序的公式中删除 "-"符号，即可使具有高中文书的层级放在首位：
-
-```{r}
-ggplot(tidyattitude, aes(reorder(question, rating, median), rating)) + 
-  geom_boxplot() +
-  coord_flip() +
-  xlab("question short name") +
-  theme_grey(16)
-```
-
-特别注意，仅改变x和y而不是 "coord_flip()"不会起到效果。
-
-```{r}
-ggplot(tidyattitude, aes(rating, reorder(question, rating, median))) + 
-  geom_boxplot() +
-  ggtitle("This is not what we wanted!") +
-  ylab("question short name") +
-  theme_grey(16)
-```
-
-## 6.5.2 不能用于分类数据
-
-盒形图很好，但是他们不适用于分类数据。使用盒形图之前，请确保处理的数据是连续变量的。
-
-## 6.6 补充资料
-
-Tukey, John W. 1977. Exploratory Data Analysis. Addison-Wesley. (Chapter 2): the primary source in which boxplots are first presented. 
-(https://clio.columbia.edu/catalog/136422)
-
-Article on boxplots with ggplot2: An excellent collection of code examples on how to make boxplots with ggplot2. Covers layering, working with legends, faceting, formatting, and more. If you want a boxplot to look a certain way, this article will help. 
-(http://t-redactyl.io/blog/2016/04/creating-plots-in-r-using-ggplot2-part-10-boxplots.html)
-
-Boxplots with plotly package: boxplot examples using the plotly package. These allow for a little interactivity on hover, which might better explain the underlying statistics of your plot.
-(https://plot.ly/ggplot2/box-plots/)
-
-ggplot2 Boxplot: Quick Start Guide: Article from STHDA on making boxplots using ggplot2. Excellent starting point for getting immediate results and custom formatting.
-(http://www.sthda.com/english/wiki/ggplot2-box-plot-quick-start-guide-r-software-and-data-visualization)
-
-ggplot2 cheatsheet: Always good to have close by.
-(https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
-
-Hadley Wickhan and Lisa Stryjewski on boxplots: good for understanding basics of more complex boxplots and some of the history behind them.
-(http://vita.had.co.nz/papers/boxplots.pdf)
-
-## 8 图表：山脊线图
-
-## 8.1 概括
-
-本章节介绍如何制作山脊线图。
-
-## 8.2 山脊线图介绍
-
-下面是对于受试者口服茶碱的茶碱浓度的观察：
-```{r eval=FALSE}
-library("ggridges")
-library("tidyverse")
-Theoph_data <- Theoph
-ggplot(Theoph_data, aes(x=Dose,y=Subject,fill=Subject))+
-  geom_density_ridges_gradient(scale = 4, show.legend = FALSE) + theme_ridges() +
-  scale_y_discrete(expand = c(0.01, 0)) +
-  scale_x_continuous(expand = c(0.01, 0)) +
-  labs(x = "Dose of theophylline(mg/kg)",y = "Subject #") +
-  ggtitle("Density estimation of dosage given to various subjects") +
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-代码如下：
-
-```{r echo=FALSE}
-library("ggridges")
-library("tidyverse")
-Theoph_data <- Theoph
-ggplot(Theoph_data, aes(x=Dose,y=Subject,fill=Subject))+
-  geom_density_ridges_gradient(scale = 4, show.legend = FALSE) + theme_ridges() +
-  scale_y_discrete(expand = c(0.01, 0)) +
-  scale_x_continuous(expand = c(0.01, 0)) +
-  labs(x = "Dose of theophylline(mg/kg)",y = "Subject #") +
-  ggtitle("Density estimation of dosage given to various subjects") +
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-对于该数据集更多的信息，请在控制台中打入 "?datasets::Theoph"。
-
-## 8.3 简单案例
-
-让我们使用"datasets"程序包中的"orange"数据集：
-
-```{r}
-library("datasets")
-head(Orange, n=5)
-```
-
-## 8.4 通过"ggridge"使用山脊线图
-
-```{r}
-library("ggridges")
-library("tidyverse")
-ggplot(Orange, aes(x=circumference,y=Tree,fill = Tree))+
-  geom_density_ridges(scale = 2, alpha=0.5) + theme_ridges()+
-  scale_fill_brewer(palette = 4)+
-  scale_y_discrete(expand = c(0.8, 0)) +
-  scale_x_continuous(expand = c(0.01, 0))+
-  labs(x="Circumference at Breast Height", y="Tree with ordering of max diameter")+
-  ggtitle("Density estimation of circumference of different types of Trees")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-"ggridge" 主要使用两个主要"geoms"来绘制山脊线密度图: "geom_density_ridges" 和 "geom_ridgeline"。它们用于绘制分类变量的密度，并查看它们在连续尺度上的分布。
-
-## 8.5 什么时候使用
-
-当必须在同一水平比例上绘制多个数据段时，可以使用山脊线图。它呈现时略有重叠。脊线图对于可视化类别变量随时间或空间的分布非常有用。
-
-使用山脊线图的一个很好的例子是可视化公司中不同部门之间的工资分配。
-
-## 8.6 山脊线图的考虑
-
-密度图的重叠可以通过调整比例值来控制。比例尺定义了下部曲线的峰与上部曲线的接触量。
-
-```{r}
-library("ggridges")
-library("tidyverse")
-OrchardSprays_data <- OrchardSprays
-ggplot(OrchardSprays_data, aes(x=decrease,y=treatment,fill=treatment))+
-  geom_density_ridges_gradient(scale=3) + theme_ridges()+
-  scale_y_discrete(expand = c(0.3, 0)) +
-  scale_x_continuous(expand = c(0.01, 0))+
-  labs(x="Response in repelling honeybees",y="Treatment")+
-  ggtitle("Density estimation of response by honeybees to a treatment for scale=3")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-```{r}
-ggplot(OrchardSprays_data, aes(x=decrease,y=treatment,fill=treatment))+
-  geom_density_ridges_gradient(scale=5) + theme_ridges()+
-  scale_y_discrete(expand = c(0.3, 0)) +
-  scale_x_continuous(expand = c(0.01, 0))+
-  labs(x="Response in repelling honeybees",y="Treatment")+
-  ggtitle("Density estimation of response by honeybees to a treatment for scale=5")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-脊线图也可以用于在公共水平轴上绘制直方图，而不是密度图。但是这样做可能不会给我们带来任何有价值的结果。
-
-```{r}
-library("ggridges")
-library("tidyverse")
-ggplot(InsectSprays, aes(x = count, y = spray, height = ..density.., fill = spray)) + 
-  geom_density_ridges(stat = "binline", bins = 20, scale = 0.7, draw_baseline = FALSE)
-```
-
-如果在山脊线图中执行相同操作，则可以得到更好结果。
-```{r}
-library("ggridges")
-library("tidyverse")
-ggplot(InsectSprays, aes(x=count,y=spray,fill=spray))+
-  geom_density_ridges_gradient() + theme_ridges()+
-  labs(x="Count of Insects",y="Types of Spray")+
-  ggtitle("The counts of insects treated with different insecticides.")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-## 8.7 补充资源
-
-Introduction to ggridges: An excellent collection of code examples on how to make ridgeline plots with ggplot2. Covers every parameter of ggridges and how to modify them for better visualization. If you want a ridgeline plot to look a certain way, this article will help.
-(https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html)
-
-Article on ridgeline plots with ggplot2: Few examples using different examples. Great for starting with ridgeline plots.
-(https://rdrr.io/cran/ggridges/man/geom_density_ridges.html)
-
-History of Ridgeline plots: To refer to the theory of ridgeline plots.
-(https://blog.revolutionanalytics.com/2017/07/joyplots.html)
-
-## 9 图表：QQ图
-
-## 9.1 介绍
-
-在统计中，Q-Q分为图算作概率图。是一种图形化方法，用于通过绘制两个分位数彼此的分位数来比较两个概率分布。绘图上的点（x，y）对应于相对于第一分布（x坐标）的相同分位数绘制的第二分布（y坐标）的分位数之一。因此，该线是参数为参数曲线，该参数为分位数的间隔数。
-
-## 9.2 解读QQ图
-
-## 9.3 是否常态（qqnorm的案例）
-
-## 9.3.1 常态 QQ图
-
-```{r}
-x <- rnorm(1000, 50, 10)
-qqnorm(x)
-qqline(x, col = "red")
-```
-
-这些点都沿着一条直线排列。注意，x轴绘制了理论分位数。这些是标准正态分布的均值0和标准差1的分位数。
-
-## 9.3.2 非常态 QQ图
-
-```{r}
-x <- rexp(1000, 5)
-qqnorm(x)
-qqline(x, col = "red")
-```
-
-需要注意的是，这些点形成的是曲线而不是直线。看起来像这样的Q-Q图通常意味着样本数据有偏斜。
-
-## 9.4 不同类别的QQ图
-
-以下图形是对所有QQ图的总结：
-
-正态qqplot：正态分布是对称的，因此没有偏斜（均值等于中位数）。
-
-右偏qqplot：右偏也称为正偏。
-
-左偏斜qqplot：左偏斜也称为负偏斜。
-
-轻尾qqplot：与正态分布相比，位于分布极端处的数据较少，而在分布中心的数据较少。
-
-重尾qqplot：与正态分布相比，位于分布极端处的数据更多，而在分布中心的数据更少。
-
-双峰模型qqplot：说明双峰分布。
-
-## 9.5 "ggplot"来绘制QQ图
-
-为了使用ggplot2绘制一个qqplot，我们必须使用数据帧，因此在这里我们将其转换为一个。我们可以看到，使用ggplot绘制qqplot具有与使用qqnorm类似的结果。
-
-```{r}
-library(ggplot2)
-x <- rnorm(1000, 50, 10)
-x <- data.frame(x)
-ggplot(x, aes(sample = x)) +
-  stat_qq() +
-  stat_qq_line()
-```
-
-但是，当我们需要绘制不同的数据组时，ggplot会对按因子进行着色非常有帮助。
-
-```{r}
-library(ggplot2)
-ggplot(mtcars, aes(sample = mpg, colour = factor(cyl))) +
-  stat_qq() +
-  stat_qq_line()
-```
-
-## 9.6 参考
-
-Understanding Q-Q Plots: A discussion from the University of Virginia Library on qqplots.
-(https://data.library.virginia.edu/understanding-q-q-plots/)
-
-How to interpret a QQ plot: Another resource for interpreting qqplots.
-(https://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot)
-
-A QQ Plot Dissection Kit: An excellent walkthrough on qqplots by Sean 
-Kross.
-(http://seankross.com/2016/02/29/A-Q-Q-Plot-Dissection-Kit.html)
-
-Probability plotting methods for the analysis of data: Paper on plotting techniques, which discusses qqplots. (Wilk, M.B.; Gnanadesikan, R. (1968))
-(https://www.jstor.org/stable/2334448?seq=1#metadata_info_tab_contents)
-
-QQ-Plot Wiki: Wikipedia entry on qqplots
-(https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot#cite_note-1)
-
