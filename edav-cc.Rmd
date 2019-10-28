@@ -21,6 +21,7 @@ We hope this document can effectively jumpstart any user (with limited language 
 3. Finally, we walked through an example from scratch, from loading data to analyzing data. (This section is adapted from PSET 1 problem 1)
 
 # 1 连续变量的理论知识
+（这一章节是翻译自书《R和图像数据分析》- Antony Unwin)
 
 ## 1.1 连续变量介绍
 百度百科上，对于连续变量的定义是这样的：
@@ -127,6 +128,7 @@ R中有很多包提供各种形式的密度估计，因为太多不便全部列�
 Good和Gaskin为寻找众数在一篇经常被引用的文章中[Good and Gaskins，1980]引入了“碰撞狩猎”（Bump-Hunting）一词。用于检验单峰性的浸入检验（dip test）在[Hartigan and Hartigan，1985]中被提出，可在R包**diptest**中找到。
 
 # 2 在R中处理连续变量
+(这一章节是翻译自网站[edav.info](edav.info)）
 
 在第一章中，我们介绍了连续变量的理论知识，包括连续变量会有的特征、可以选择的图形、绘图过程中需要注意的选项、以及如何正确的解读处理连续变量的图形。在这一章节中，我们将仔细讲解如何在R中绘制这些图形和绘制时的注意事项。
 
@@ -984,7 +986,7 @@ ggplot(mtcars, aes(sample = mpg, colour = factor(cyl))) +
 
 
 # 3 问题实例：鲍鱼分析
-
+（这一章节是取自、翻译自STATS 5702 PSET1 Problem 1）
 在介绍完R的多种处理连续变量的方式后，我们用一个实例问题来演示面对一组未被探索数据时，我们采取哪些步骤来解读数据。
 
 ### 3.1 假设我们有这么一组关于鲍鱼的数据；总共有4177个观察结果，分别为9个变量。我们可以如何使用R来帮助我们更好的可视化这组数据，并得出一些结论？
