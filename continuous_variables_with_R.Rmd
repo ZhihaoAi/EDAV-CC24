@@ -1,10 +1,8 @@
----
-title: "如何在R中处理连续变量数据"
-author: "Bangwei Zhou (bz2280), Zhihao Ai(za2272)"
-output: html_document
----
+# Continuous variables with R (Chinese)
 
-```{r setup, include=FALSE}
+Bangwei Zhou and Zhihao Ai
+
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
 ```
 
@@ -1008,7 +1006,7 @@ packages.install(“ggplot2”) #安装作图程序包
 	library(ggplot2)
 	library(ucidata)
 
-	data(abalone, package = "ucidata") #储存鲍鱼数据集到本地
+	data(abalone, package = "ucidata") #本地调用鲍鱼数据
 	ggplot(abalone, aes(shucked_weight)) +
 		geom_histogram(color = "grey50", fill = "lightblue")+
 		theme_grey(14)
